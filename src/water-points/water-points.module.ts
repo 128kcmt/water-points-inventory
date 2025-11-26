@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { WaterPointsService } from './water-points.service';
 
-@Module({})
+@Module({
+  providers: [WaterPointsService]
+})
 export class WaterPointsModule {}
