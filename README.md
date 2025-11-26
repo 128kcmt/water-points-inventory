@@ -33,16 +33,19 @@ This is the backend for the Malawi Water Point Inventory Dashboard, built with N
    ```bash
    cp .env.example .env
    ```
-   
-   Ensure your PostgreSQL database has PostGIS enabled:
-   ```sql
-   CREATE EXTENSION postgis;
-   ```
 
-4. Run the application:
+4. Database Setup (Docker):
+   If you don't have a local PostgreSQL instance, you can use Docker:
+   ```bash
+   docker-compose up -d
+   ```
+   This will start a PostgreSQL database with PostGIS enabled on port 5432.
+
+5. Run the application:
    ```bash
    # Development
    npm run start:dev
+
 
    # Production
    npm run build

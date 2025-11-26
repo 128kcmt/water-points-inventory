@@ -5,6 +5,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  console.log('DEBUG: POSTGRES_DB is:', process.env.POSTGRES_DB);
+
   const config = new DocumentBuilder()
     .setTitle('Malawi Water Point Inventory API')
     .setDescription('API for Water Point Inventory Dashboard')
