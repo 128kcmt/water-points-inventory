@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { MultiPolygon } from 'geojson';
+import type { MultiPolygon } from 'geojson';
 
 @Entity('adm')
 export class Adm {

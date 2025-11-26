@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
-import { LineString } from 'geojson';
+import type { LineString } from 'geojson';
 
 @Entity('roads')
 export class Road {
