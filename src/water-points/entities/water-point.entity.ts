@@ -4,26 +4,26 @@ import type { Point } from 'geojson';
 @Entity('water_points')
 export class WaterPoint {
     @PrimaryGeneratedColumn()
-    fid: number;
+    id: number;
 
     @Column({ nullable: true })
     name: string;
 
-    @Column({ nullable: true })
-    name_en: string;
+
+
+
 
     @Column({ nullable: true })
-    amenity: string;
+    status: string;
 
     @Column({ nullable: true })
-    man_made: string;
+    district: string;
 
-    @Index({ spatial: true })
-    @Column({
-        type: 'geometry',
-        spatialFeatureType: 'Point',
-        srid: 4326,
-        nullable: true,
-    })
-    geom: Point;
+    @Column({ type: 'double precision', nullable: true })
+    lat: number;
+
+    @Column({ type: 'double precision', nullable: true })
+    lon: number;
+
+    // geom column does not exist in the database, we will construct it on the fly if needed
 }
