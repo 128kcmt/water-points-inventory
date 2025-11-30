@@ -10,23 +10,21 @@ export class WaterPointsService {
         private waterPointsRepository: Repository<WaterPoint>,
     ) { }
 
-
-
     async findNearest(lat: number, lon: number): Promise<any> {
-        // Find 5 nearest water points using lat/lon columns
+        // Find 5 nearest water points
         const nearestPoints = await this.waterPointsRepository
             .createQueryBuilder('wp')
             .select([
-                'wp.id',
+                'wp.fid',
                 'wp.name',
-                'wp.status',
-                'wp.district',
-                'wp.lat',
-                'wp.lon',
+                'wp.name_en',
+                'wp.amenity',
+                'wp.man_made',
+                'ST_AsGeoJSON(wp.geom) as geom',
                 `ST_Distance(
-                    ST_SetSRID(ST_MakePoint(wp.lon, wp.lat), 4326)::geography, 
-                    ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
-                ) as distance`,
+          wp.geom::geography, 
+          ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
+        ) as distance`,
             ])
             .setParameter('lon', lon)
             .setParameter('lat', lat)
@@ -34,9 +32,14 @@ export class WaterPointsService {
             .limit(5)
             .getRawMany();
 
+        // For each point, calculate route (mock or using pgRouting if roads table is set up for it)
+        // Since pgRouting requires a topology and specific query, we will return the points and a placeholder for route
+        // In a real scenario, we would join with roads or use pgr_dijkstra
+
+        // Returning points with distance
         return nearestPoints.map(point => ({
             ...point,
-            geom: { type: 'Point', coordinates: [point.wp_lon, point.wp_lat] }, // Construct GeoJSON manually
+            geom: JSON.parse(point.geom),
             route: 'Route calculation requires pgRouting setup on roads table', // Placeholder
         }));
     }
@@ -64,10 +67,10 @@ export class WaterPointsService {
 
         const pointsInBuffer = await this.waterPointsRepository
             .createQueryBuilder('wp')
-            .select('COUNT(wp.id)', 'count')
+            .select('COUNT(wp.fid)', 'count')
             .where(
                 `ST_DWithin(
-          ST_SetSRID(ST_MakePoint(wp.lon, wp.lat), 4326)::geography,
+          wp.geom::geography,
           ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
           :radius
         )`,
@@ -82,5 +85,12 @@ export class WaterPointsService {
             waterPointsCount: parseInt(pointsInBuffer.count, 10),
             estimatedPopulation: parseInt(pointsInBuffer.count, 10) * 100, // Mock: 100 people per water point
         };
+    }
+
+
+    async findAll(): Promise<WaterPoint[]> {
+        return this.waterPointsRepository.find({
+            take: 100, // Limit to 100 for performance
+        });
     }
 }

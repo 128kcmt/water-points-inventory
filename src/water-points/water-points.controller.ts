@@ -22,4 +22,10 @@ export class WaterPointsController {
     async getPopulationInBuffer(@Query('lat') lat: number, @Query('lon') lon: number) {
         return this.waterPointsService.getPopulationInBuffer(lat, lon);
     }
+
+    @Get('water-points')
+    @ApiOperation({ summary: 'Get all water points' })
+    findAll() {
+        return this.waterPointsService.findAll();
+    }
 }
