@@ -22,7 +22,7 @@ import { RoadsModule } from './roads/roads.module';
         password: configService.get<string>('POSTGRES_PASSWORD'),
         database: configService.get<string>('POSTGRES_DB'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Set to false in production
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
