@@ -22,7 +22,7 @@ export class WaterPointsService {
             const result = await this.dataSource.query(
                 `SELECT v.id
                  FROM water_points_inventory.roads_vertices_pgr v
-                 ORDER BY v.the_geom <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
+                 ORDER BY v.geom <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
                  LIMIT 1`,
                 [lon, lat]
             );
@@ -65,7 +65,7 @@ export class WaterPointsService {
                    'SELECT id, source, target, cost, reverse_cost 
                     FROM water_points_inventory.roads
                     WHERE source IS NOT NULL AND target IS NOT NULL',
-                   $1, $2, false
+                   $1::BIGINT, $2::BIGINT, false
                  ) AS d
                  JOIN water_points_inventory.roads r ON d.edge = r.id`,
                 [startVertex, endVertex]
@@ -152,7 +152,7 @@ export class WaterPointsService {
 
     async findAll(): Promise<WaterPoint[]> {
         return this.waterPointsRepository.find({
-            take: 100, // Limit to 100 for performance
+            take: 1000, // Limit to 100 for performance
         });
     }
 }

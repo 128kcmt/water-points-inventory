@@ -114,15 +114,18 @@ const UiService = {
             const li = document.createElement('li');
             li.className = `nearest-item ${point.status}`;
             li.innerHTML = `
-                <span class="nearest-name">${point.name}</span>
+                <span class="nearest-name">${point.wp_name || point.name || 'Unknown'}</span>
                 <div class="nearest-meta">
-                    <span>${point.status}</span>
-                    <span>${parseFloat(point.distance).toFixed(2)} km</span>
+                    <span>${point.wp_status || point.status || 'Unknown'}</span>
+                    <span>${(parseFloat(point.distance) / 1000).toFixed(2)} km</span>
                 </div>
             `;
 
             li.addEventListener('click', () => {
-                MapService.handlePointClick(point, { lat: parseFloat(point.lat), lng: parseFloat(point.lon) });
+                MapService.handlePointClick(point, {
+                    lat: parseFloat(point.wp_lat),
+                    lng: parseFloat(point.wp_lon)
+                });
             });
 
             list.appendChild(li);

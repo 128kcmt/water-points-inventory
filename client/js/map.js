@@ -185,10 +185,28 @@ const MapService = {
         this.flowLinesLayer.clearLayers();
 
         destinations.forEach(dest => {
-            const path = [
-                [origin.lat, origin.lng],
-                [dest.lat, dest.lon]
-            ];
+            let path;
+
+            // Check if route geometry exists (from pgRouting)
+            if (dest.route && dest.route.coordinates && dest.route.coordinates.length > 0) {
+                // Use route coordinates (GeoJSON format: [lon, lat])
+                path = dest.route.coordinates.map(coord => [coord[1], coord[0]]);
+            } else {
+                // Fallback to straight line - use wp_lat/wp_lon from backend
+                const destLat = parseFloat(dest.wp_lat || dest.lat);
+                const destLon = parseFloat(dest.wp_lon || dest.lon);
+
+                // Skip if coordinates are invalid
+                if (isNaN(destLat) || isNaN(destLon)) {
+                    console.warn('Invalid coordinates for destination:', dest);
+                    return;
+                }
+
+                path = [
+                    [origin.lat, origin.lng],
+                    [destLat, destLon]
+                ];
+            }
 
             // Use Leaflet.antPath
             L.polyline.antPath(path, {
