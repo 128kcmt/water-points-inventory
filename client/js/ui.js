@@ -56,17 +56,18 @@ const UiService = {
     async loadInitialData() {
         this.showSpinner(true);
 
-        // Load Stats
-        const stats = await ApiService.getStats();
-        if (stats) {
-            document.getElementById('stat-total').textContent = stats.total.toLocaleString();
-            document.getElementById('stat-functional').textContent = stats.functional.toLocaleString();
-            document.getElementById('stat-broken').textContent = stats.broken.toLocaleString();
-        }
-
         // Load Map Points
         this.allPoints = await ApiService.getWaterPoints();
         MapService.loadPoints(this.allPoints);
+
+        // Calculate Stats Client-Side from loaded points
+        const total = this.allPoints.length;
+        const functional = this.allPoints.filter(p => p.status === 'Functional').length;
+        const broken = this.allPoints.filter(p => p.status === 'Non-Functional' || p.status === 'Partially Functional').length;
+
+        document.getElementById('stat-total').textContent = total.toLocaleString();
+        document.getElementById('stat-functional').textContent = functional.toLocaleString();
+        document.getElementById('stat-broken').textContent = broken.toLocaleString();
 
         this.showSpinner(false);
     },
