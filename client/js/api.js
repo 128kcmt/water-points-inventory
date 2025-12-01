@@ -12,7 +12,7 @@ const ApiService = {
      */
     async getWaterPoints() {
         try {
-            const response = await fetch(`${API_BASE}/water_points`);
+            const response = await fetch(`${API_BASE}/water-points`);
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
         } catch (error) {
