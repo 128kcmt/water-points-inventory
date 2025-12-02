@@ -1,4 +1,12 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
+import { RoadsService } from './roads.service';
 
 @Controller('roads')
-export class RoadsController {}
+export class RoadsController {
+    constructor(private readonly roadsService: RoadsService) { }
+
+    @Get('schema')
+    getSchema() {
+        return this.roadsService.getSchema();
+    }
+}
