@@ -1,15 +1,85 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { WaterPoint } from './entities/water-point.entity';
 
 @Injectable()
-export class WaterPointsService {
+export class WaterPointsService implements OnModuleInit {
+    private readonly logger = new Logger(WaterPointsService.name);
+
     constructor(
         @InjectRepository(WaterPoint)
         private waterPointsRepository: Repository<WaterPoint>,
         private dataSource: DataSource,
     ) { }
+
+    async onModuleInit() {
+        await this.checkAndFixTopology();
+    }
+
+    private async checkAndFixTopology() {
+        try {
+            this.logger.log('Checking network topology...');
+
+            // Check if we have roads with null source/target
+            const unlinkedRoads = await this.dataSource.query(
+                `SELECT COUNT(*) as count FROM water_points_inventory.roads 
+                 WHERE source IS NULL OR target IS NULL`
+            );
+
+            if (parseInt(unlinkedRoads[0].count) > 0) {
+                this.logger.warn(`Found ${unlinkedRoads[0].count} unlinked roads. Fixing topology... (this may take a while)`);
+
+                // 1. Update source IDs (Start Point)
+                await this.dataSource.query(`
+                    UPDATE water_points_inventory.roads r
+                    SET source = v.id
+                    FROM water_points_inventory.roads_vertices_pgr v
+                    WHERE r.source IS NULL
+                    AND v.id = (
+                        SELECT id FROM water_points_inventory.roads_vertices_pgr
+                        ORDER BY geom <-> ST_StartPoint(r.geom) LIMIT 1
+                    )
+                `);
+
+                // 2. Update target IDs (End Point)
+                await this.dataSource.query(`
+                    UPDATE water_points_inventory.roads r
+                    SET target = v.id
+                    FROM water_points_inventory.roads_vertices_pgr v
+                    WHERE r.target IS NULL
+                    AND v.id = (
+                        SELECT id FROM water_points_inventory.roads_vertices_pgr
+                        ORDER BY geom <-> ST_EndPoint(r.geom) LIMIT 1
+                    )
+                `);
+
+                this.logger.log('Topology links updated.');
+            }
+
+            // Check costs
+            const nullCosts = await this.dataSource.query(
+                `SELECT COUNT(*) as count FROM water_points_inventory.roads 
+                 WHERE cost IS NULL OR reverse_cost IS NULL`
+            );
+
+            if (parseInt(nullCosts[0].count) > 0) {
+                this.logger.log('Updating road costs...');
+                await this.dataSource.query(`
+                    UPDATE water_points_inventory.roads
+                    SET 
+                        cost = ST_Length(geom::geography),
+                        reverse_cost = ST_Length(geom::geography)
+                    WHERE cost IS NULL OR reverse_cost IS NULL
+                `);
+                this.logger.log('Road costs updated.');
+            }
+
+            this.logger.log('Network topology check complete.');
+        } catch (error) {
+            this.logger.error('Error fixing topology:', error);
+        }
+    }
 
     /**
      * Find nearest road vertex to a given point
@@ -59,8 +129,29 @@ export class WaterPointsService {
             }
 
             // Get route using pgRouting
+            console.log(`Attempting route from vertex ${startVertex} to ${endVertex}`);
+
+            // First check if a route exists and get count
+            const routeExists = await this.dataSource.query(
+                `SELECT count(*) FROM pgr_dijkstra(
+                   'SELECT id, source, target, cost, reverse_cost 
+                    FROM water_points_inventory.roads
+                    WHERE source IS NOT NULL AND target IS NOT NULL',
+                   $1::BIGINT, $2::BIGINT, false
+                 )`,
+                [startVertex, endVertex]
+            );
+
+            const edgeCount = parseInt(routeExists[0].count);
+            console.log(`pgr_dijkstra found ${edgeCount} edges`);
+
+            if (edgeCount === 0) {
+                console.warn(`✗ No route found from vertex ${startVertex} to ${endVertex}`);
+                return null;
+            }
+
             const result = await this.dataSource.query(
-                `SELECT ST_AsGeoJSON(ST_Union(r.geom))::json AS geojson
+                `SELECT ST_AsGeoJSON(ST_LineMerge(ST_Union(r.geom)))::json AS geojson
                  FROM pgr_dijkstra(
                    'SELECT id, source, target, cost, reverse_cost 
                     FROM water_points_inventory.roads
@@ -72,9 +163,11 @@ export class WaterPointsService {
             );
 
             if (result && result[0] && result[0].geojson) {
+                console.log(`✓ Route found from ${startVertex} to ${endVertex}`);
                 return result[0].geojson;
             }
 
+            console.warn(`✗ No route found from vertex ${startVertex} to ${endVertex}`);
             return null;
         } catch (error) {
             console.error('Error fetching route from pgRouting:', error);
@@ -152,7 +245,7 @@ export class WaterPointsService {
 
     async findAll(): Promise<WaterPoint[]> {
         return this.waterPointsRepository.find({
-            take: 1000, // Limit to 100 for performance
+            take: 1000, // Limit to 1000 for performance
         });
     }
 }
