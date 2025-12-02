@@ -150,8 +150,15 @@ const UiService = {
     filterMap(filter) {
         if (filter === 'all') {
             MapService.loadPoints(this.allPoints);
-        } else {
-            const filtered = this.allPoints.filter(p => p.status === filter);
+        } else if (filter === 'functional') {
+            // Filter for Functional status
+            const filtered = this.allPoints.filter(p => p.status === 'Functional');
+            MapService.loadPoints(filtered);
+        } else if (filter === 'broken') {
+            // Filter for Non-Functional and Partially Functional
+            const filtered = this.allPoints.filter(p =>
+                p.status === 'Non-Functional' || p.status === 'Partially Functional'
+            );
             MapService.loadPoints(filtered);
         }
     },
