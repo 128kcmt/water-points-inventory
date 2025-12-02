@@ -9,7 +9,27 @@ const UiService = {
 
     init() {
         this.bindEvents();
+        this.initTheme();
         this.loadInitialData();
+    },
+
+    initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        this.updateThemeIcon(savedTheme);
+
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            this.updateThemeIcon(next);
+        });
+    },
+
+    updateThemeIcon(theme) {
+        const btn = document.getElementById('theme-toggle');
+        btn.textContent = theme === 'dark' ? '🌙' : '☀️';
     },
 
     bindEvents() {
