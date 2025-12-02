@@ -188,9 +188,21 @@ const MapService = {
             let path;
 
             // Check if route geometry exists (from pgRouting)
-            if (dest.route && dest.route.coordinates && dest.route.coordinates.length > 0) {
-                // Use route coordinates (GeoJSON format: [lon, lat])
-                path = dest.route.coordinates.map(coord => [coord[1], coord[0]]);
+            if (dest.route && dest.route.coordinates) {
+                if (dest.route.type === 'LineString') {
+                    // LineString: [[lon, lat], [lon, lat], ...]
+                    path = dest.route.coordinates.map(coord => [coord[1], coord[0]]);
+                } else if (dest.route.type === 'MultiLineString') {
+                    // MultiLineString: [[[lon, lat], ...], [[lon, lat], ...]]
+                    // Flatten to a single array of paths or handle as multiple paths
+                    // For simplicity, we'll just take all segments and flatten them into one long path if possible, 
+                    // or better, draw them as separate segments. Leaflet.antPath supports array of arrays for MultiPolyline.
+
+                    // Map each segment: swap [lon, lat] to [lat, lon]
+                    path = dest.route.coordinates.map(segment =>
+                        segment.map(coord => [coord[1], coord[0]])
+                    );
+                }
             } else {
                 // Fallback to straight line - use wp_lat/wp_lon from backend
                 const destLat = parseFloat(dest.wp_lat || dest.lat);
