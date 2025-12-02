@@ -9,6 +9,13 @@ const MapService = {
     bufferLayer: null, // Layer for the 5km circle
     flowLinesLayer: null, // Layer for AntPath lines
     userMarker: null, // Marker for user click/search location
+    currentTileLayer: null, // Current active tile layer
+
+    // Tile layers for different themes
+    tileLayers: {
+        dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    },
 
     // Icons
     icons: {
@@ -48,12 +55,9 @@ const MapService = {
             attributionControl: false
         }).setView([-13.25, 34.0], 7);
 
-        // Dark matter tile layer (CartoDB)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(this.map);
+        // Initialize with theme-appropriate tile layer
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        this.setTileLayer(currentTheme);
 
         // Add attribution manually to bottom right if needed, or leave clean
         L.control.attribution({ position: 'bottomright' }).addTo(this.map);
@@ -220,6 +224,25 @@ const MapService = {
                 "hardwareAccelerated": true
             }).addTo(this.flowLinesLayer);
         });
+    },
+
+    /**
+     * Switch map tile layer based on theme.
+     * @param {string} theme - 'light' or 'dark'
+     */
+    setTileLayer(theme) {
+        // Remove existing tile layer if present
+        if (this.currentTileLayer) {
+            this.map.removeLayer(this.currentTileLayer);
+        }
+
+        // Add new tile layer based on theme
+        const tileUrl = this.tileLayers[theme] || this.tileLayers.dark;
+        this.currentTileLayer = L.tileLayer(tileUrl, {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(this.map);
     }
 };
 

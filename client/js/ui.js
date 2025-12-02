@@ -24,6 +24,11 @@ const UiService = {
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             this.updateThemeIcon(next);
+
+            // Switch map tile layer
+            if (window.MapService && window.MapService.setTileLayer) {
+                window.MapService.setTileLayer(next);
+            }
         });
     },
 
