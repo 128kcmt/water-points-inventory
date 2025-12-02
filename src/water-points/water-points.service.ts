@@ -234,12 +234,26 @@ export class WaterPointsService implements OnModuleInit {
             )
             .getRawOne();
 
+        const populationResult = await this.dataSource.query(
+            `
+            WITH buffer_geom AS (
+                SELECT ST_SetSRID(ST_Buffer(ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)::geometry, 4326) as geom
+            )
+            SELECT SUM((ST_SummaryStats(ST_Clip(rast, buffer_geom.geom))).sum) as population
+            FROM water_points_inventory.population_raster, buffer_geom
+            WHERE ST_Intersects(rast, buffer_geom.geom)
+            `,
+            [lon, lat, bufferRadius]
+        );
+
+        const population = populationResult[0]?.population || 0;
+
         return {
             lat,
             lon,
             bufferRadius,
             waterPointsCount: parseInt(pointsInBuffer.count, 10),
-            population: parseInt(pointsInBuffer.count, 10) * 100, // Mock: 100 people per water point
+            population: Math.round(population),
         };
     }
 
