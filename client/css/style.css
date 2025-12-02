@@ -5,21 +5,33 @@
  */
 
 :root {
+    /* Common Variables */
+    --accent-green: #009900;
+    --accent-red: #ce1126;
+    --accent-blue: #00aaff;
+    --font-main: 'Roboto', sans-serif;
+    --font-heading: 'Roboto Condensed', sans-serif;
+    
+    /* Default (Dark) Theme */
     --bg-dark: #121212;
     --bg-panel: #1e1e1e;
     --bg-hover: #2d2d2d;
     --text-main: #ffffff;
     --text-muted: #aaaaaa;
-    --accent-green: #009900;
-    /* Malawi Green */
-    --accent-red: #ce1126;
-    /* Malawi Red */
-    --accent-blue: #00aaff;
-    /* Water Blue */
     --border-color: #333333;
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --font-main: 'Roboto', sans-serif;
-    --font-heading: 'Roboto Condensed', sans-serif;
+    --map-bg: #0a0a0a;
+}
+
+[data-theme="light"] {
+    --bg-dark: #f0f2f5;
+    --bg-panel: #ffffff;
+    --bg-hover: #e4e6eb;
+    --text-main: #050505;
+    --text-muted: #65676b;
+    --border-color: #ced0d4;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --map-bg: #e5e3df;
 }
 
 * {
@@ -50,7 +62,7 @@ html {
     width: 100%;
     height: 100%;
     z-index: 1;
-    background-color: #0a0a0a;
+    background-color: var(--map-bg);
     /* Dark map background */
 }
 
@@ -59,7 +71,7 @@ html {
     position: absolute;
     z-index: 1000;
     /* Above map */
-    background-color: rgba(30, 30, 30, 0.95);
+    background-color: var(--bg-panel); /* Changed from rgba to var */
     backdrop-filter: blur(5px);
     border-radius: 8px;
     box-shadow: var(--shadow);
@@ -188,7 +200,8 @@ html {
 }
 
 .filter-btn:hover {
-    background-color: #444;
+    background-color: var(--bg-hover); /* Fixed hover color */
+    filter: brightness(1.2);
 }
 
 .filter-btn.active {
@@ -312,7 +325,8 @@ html {
 
 .nearest-item:hover {
     transform: translateX(5px);
-    background-color: #333;
+    background-color: var(--bg-hover);
+    filter: brightness(1.1);
 }
 
 .nearest-item.functional {
@@ -352,6 +366,7 @@ html {
     padding: 0 20px;
     font-size: 12px;
     font-weight: bold;
+    color: #fff; /* Force white text on red bar */
 }
 
 .status-message {
@@ -385,7 +400,7 @@ html {
     bottom: 50px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(30, 30, 30, 0.95);
+    background-color: var(--bg-panel);
     backdrop-filter: blur(10px);
     padding: 20px;
     border-radius: 12px;
@@ -445,7 +460,7 @@ html {
     font-size: 36px;
     font-weight: bold;
     font-family: var(--font-heading);
-    color: #fff;
+    color: var(--text-main);
 }
 
 .pop-label {
