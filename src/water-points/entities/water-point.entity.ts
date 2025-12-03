@@ -24,6 +24,4 @@ export class WaterPoint {
 
     @Column({ type: 'double precision', nullable: true })
     lon: number;
-
-    // geom column does not exist in the database, we will construct it on the fly if needed
 }
